@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -17,7 +18,13 @@ public class PaymentService {
 @PostMapping("/orders/{order_id}/payments")
 public ResponseEntity<?> payForOrder(@PathVariable("order_id") String orderId,
                                      @RequestHeader("Revolut-Api-Version") String apiVersion,
+                                     @RequestHeader(value = "deviate" , required = false) boolean deviate,
                                      @RequestBody Map<String, Object> request) {
+    if(deviate){
+        Map<String,Object> map = new LinkedHashMap<>();
+        map.put("state","authorisation_failed");
+        return new ResponseEntity<>(map,HttpStatus.CREATED);
+    }
     return new ResponseEntity<>(HttpStatus.CREATED);
 }
 
