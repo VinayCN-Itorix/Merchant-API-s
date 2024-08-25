@@ -10,7 +10,7 @@ import java.util.Map;
 
 @RestController
 @EnableCompliance
-@RequestMapping("/merchant-locations")
+@RequestMapping("/merchant-locations/api/locations")
 public class LocationService {
 
 @PostMapping
