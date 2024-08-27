@@ -1,11 +1,16 @@
 package com.merchant.banking.controller;
 
 import io.apiwiz.compliance.config.EnableCompliance;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -14,8 +19,14 @@ import java.util.Map;
 @RequestMapping("/merchant-customer/api/1.0/customers")
 public class CustomersService {
 
+@Value("${api.create.order:null}")
+private String createOrder ;
+@Autowired
+private RestTemplate restTemplate;
 @PostMapping
-public ResponseEntity<?> createCustomer(@RequestBody Map<String, Object> customerRequest) {
+public ResponseEntity<?> createCustomer(@RequestBody Map<String, Object> customerRequest,
+                                        @RequestHeader(value = "enableTracing", required = false) boolean enableTracing,
+                                        @RequestHeader(value = "deviate", required = false) boolean deviate) throws URISyntaxException  {
     Map<String, Object> customer = Map.ofEntries(
             Map.entry("id", "6c7c97a8-cfc1-4cf3-8b38-26a74fdf1fae"),
             Map.entry("full_name", "Example Customer"),
@@ -25,7 +36,19 @@ public ResponseEntity<?> createCustomer(@RequestBody Map<String, Object> custome
             Map.entry("created_at", "2020-06-24T12:03:39.979397Z"),
             Map.entry("updated_at", "2020-06-24T12:03:39.979397Z")
     );
-    
+    if(enableTracing){
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("enableTracing",String.valueOf(Boolean.TRUE));
+        headers.add("deviate",String.valueOf(deviate));
+        headers.add("Content-Type","application/json");
+        
+        Map<String, Object> orderInfo = new LinkedHashMap<String, Object>() {{
+           put("amount","500");
+           put("currency","GBP");
+        }};
+        HttpEntity<Map<String, Object>> httpEntity = new HttpEntity<>(orderInfo, headers);
+        restTemplate.exchange(new URI(createOrder), HttpMethod.POST,httpEntity,Object.class);
+    }
     return new ResponseEntity<>(customer, HttpStatus.CREATED);
 }
 

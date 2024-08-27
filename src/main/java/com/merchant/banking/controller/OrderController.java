@@ -1,10 +1,15 @@
 package com.merchant.banking.controller;
 
 import io.apiwiz.compliance.config.EnableCompliance;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -12,9 +17,15 @@ import java.util.Map;
 @EnableCompliance
 @RequestMapping("/merchant-order/api")
 class OrderController {
+@Value("${api.pay.order:null}")
+private String payOrderUrl ;
+@Autowired
+private RestTemplate restTemplate;
 
 @PostMapping("/orders")
-public ResponseEntity<?> createOrder(@RequestBody Map<String, Object> request) {
+public ResponseEntity<?> createOrder(@RequestBody Map<String, Object> request,
+                                     @RequestHeader(value = "enableTracing", required = false) boolean enableTracing,
+                                     @RequestHeader(value = "deviate", required = false) boolean deviate) throws URISyntaxException {
     Map<String, Object> payment = Map.ofEntries(
             Map.entry("id", "6516e61c-d279-a454-a837-bc52ce55ed49"),
             Map.entry("token", "0adc0e3c-ab44-4f33-bcc0-534ded7354ce"),
@@ -29,6 +40,35 @@ public ResponseEntity<?> createOrder(@RequestBody Map<String, Object> request) {
             Map.entry("checkout_url", "https://checkout.revolut.com/payment-link/0adc0e3c-ab44-4f33-bcc0-534ded7354ce"),
             Map.entry("enforce_challenge", "automatic")
     );
+    if(enableTracing){
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("enableTracing",String.valueOf(Boolean.TRUE));
+        headers.add("deviate",String.valueOf(deviate));
+        headers.add("Content-Type","application/json");
+        headers.add("Revolut-Api-Version","new-3.2");
+        
+        Map<String, Object> requestPayload = new LinkedHashMap<String, Object>() {{
+            put("saved_payment_method", new LinkedHashMap<String, Object>() {{
+                put("type", "card");
+                put("id", "2b83c23a-650e-40c3-8989-00ee24478738");
+                put("initiator", "customer");
+                
+                // Create the nested environment map
+                put("environment", new LinkedHashMap<String, Object>() {{
+                    put("type", "browser");
+                    put("time_zone_utc_offset", 180);
+                    put("color_depth", 48);
+                    put("screen_width", 1920);
+                    put("screen_height", 1080);
+                    put("java_enabled", true);
+                    put("challenge_window_width", 640);
+                    put("browser_url", "https://business.revolut.com");
+                }});
+            }});
+        }};
+        HttpEntity<Map<String, Object>> httpEntity = new HttpEntity<>(requestPayload, headers);
+        restTemplate.exchange(new URI(payOrderUrl), HttpMethod.POST,httpEntity,Object.class);
+    }
     return new ResponseEntity<>(payment, HttpStatus.CREATED);
 }
 

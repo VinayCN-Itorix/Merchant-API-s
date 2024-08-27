@@ -1,10 +1,14 @@
 package com.merchant.banking.controller;
 
 import io.apiwiz.compliance.config.EnableCompliance;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -14,16 +18,44 @@ import java.util.Map;
 @EnableCompliance
 @RequestMapping("/merchant-payment/api")
 public class PaymentService {
+@Value("${api.capture.order:null}")
+private String captureOrder ;
+@Value("${api.cancel.order:null}")
+private String cancelOrder ;
+@Autowired
+private RestTemplate restTemplate;
 
 @PostMapping("/orders/{order_id}/payments")
 public ResponseEntity<?> payForOrder(@PathVariable("order_id") String orderId,
                                      @RequestHeader("Revolut-Api-Version") String apiVersion,
                                      @RequestHeader(value = "deviate" , required = false) boolean deviate,
-                                     @RequestBody Map<String, Object> request) {
+                                     @RequestBody Map<String, Object> request,
+                                     @RequestHeader(value = "enableTracing", required = false) boolean enableTracing) throws URISyntaxException {
     if(deviate){
         Map<String,Object> map = new LinkedHashMap<>();
         map.put("state","authorisation_failed");
+        if(enableTracing){
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("enableTracing",String.valueOf(Boolean.TRUE));
+            headers.add("Revolut-Api-Version","new-3.2");
+            headers.add("Content-Type","application/json");
+            Map<String, Object> orderInfo = new LinkedHashMap<String, Object>() {{
+                put("amount", "500");
+                put("currency","GBP");
+            }};
+            HttpEntity<Map<String, Object>> httpEntity = new HttpEntity<>(orderInfo, headers);
+            restTemplate.exchange(new URI(cancelOrder), HttpMethod.POST,httpEntity,Object.class);
+        }
         return new ResponseEntity<>(map,HttpStatus.CREATED);
+    }
+    if(enableTracing){
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("enableTracing",String.valueOf(Boolean.TRUE));
+        Map<String, Object> orderInfo = new LinkedHashMap<String, Object>() {{
+            put("amount", "500");
+        }};
+        HttpEntity<Map<String, Object>> httpEntity = new HttpEntity<>(orderInfo, headers);
+        restTemplate.exchange(new URI(captureOrder), HttpMethod.POST,httpEntity,Object.class);
     }
     return new ResponseEntity<>(HttpStatus.CREATED);
 }
