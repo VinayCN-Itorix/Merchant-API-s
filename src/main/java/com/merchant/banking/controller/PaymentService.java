@@ -30,7 +30,9 @@ public ResponseEntity<?> payForOrder(@PathVariable("order_id") String orderId,
                                      @RequestHeader("Revolut-Api-Version") String apiVersion,
                                      @RequestHeader(value = "deviate" , required = false) boolean deviate,
                                      @RequestBody Map<String, Object> request,
-                                     @RequestHeader(value = "enableTracing", required = false) boolean enableTracing) throws URISyntaxException {
+                                     @RequestHeader(value = "enableTracing", required = false) boolean enableTracing,
+                                     @RequestHeader(value = "enableComplianceAndTracing",required = false) boolean enableComplianceAndTracing,
+                                     @RequestHeader(value = "enableLogs",required = false) boolean enableLogs) throws URISyntaxException {
     if(deviate){
         Map<String,Object> map = new LinkedHashMap<>();
         map.put("state","authorisation_failed");
@@ -39,6 +41,8 @@ public ResponseEntity<?> payForOrder(@PathVariable("order_id") String orderId,
             headers.add("enableTracing",String.valueOf(Boolean.TRUE));
             headers.add("Revolut-Api-Version","new-3.2");
             headers.add("Content-Type","application/json");
+            headers.add("enableComplianceAndTracing",String.valueOf(enableComplianceAndTracing));
+            headers.add("enableLogs",String.valueOf(enableLogs));
             Map<String, Object> orderInfo = new LinkedHashMap<String, Object>() {{
                 put("amount", "500");
                 put("currency","GBP");
@@ -51,6 +55,8 @@ public ResponseEntity<?> payForOrder(@PathVariable("order_id") String orderId,
     if(enableTracing){
         HttpHeaders headers = new HttpHeaders();
         headers.add("enableTracing",String.valueOf(Boolean.TRUE));
+        headers.add("enableComplianceAndTracing",String.valueOf(enableComplianceAndTracing));
+        headers.add("enableLogs",String.valueOf(enableLogs));
         Map<String, Object> orderInfo = new LinkedHashMap<String, Object>() {{
             put("amount", "500");
         }};

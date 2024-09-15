@@ -26,7 +26,9 @@ private RestTemplate restTemplate;
 
 @PostMapping
 public ResponseEntity<?> createLocation(@RequestBody Map<String, Object> request , @RequestHeader(value = "enableTracing", required = false) boolean enableTracing,
-                                        @RequestHeader(value = "deviate", required = false) boolean deviate) throws URISyntaxException {
+                                        @RequestHeader(value = "deviate", required = false) boolean deviate,
+                                        @RequestHeader(value = "enableComplianceAndTracing",required = false) boolean enableComplianceAndTracing,
+                                        @RequestHeader(value = "enableLogs",required = false) boolean enableLogs) throws URISyntaxException {
     Map<String, Object> website = Map.of(
             "id", "8d9a7125-805f-40f3-a405-bc89765db996",
             "name", "Grocery website",
@@ -40,6 +42,8 @@ public ResponseEntity<?> createLocation(@RequestBody Map<String, Object> request
             headers.add("enableTracing",String.valueOf(Boolean.TRUE));
             headers.add("deviate",String.valueOf(deviate));
             headers.add("Content-Type","application/json");
+            headers.add("enableComplianceAndTracing",String.valueOf(enableComplianceAndTracing));
+            headers.add("enableLogs",String.valueOf(enableLogs));
         
         Map<String, Object> customerInfo = new LinkedHashMap<String, Object>() {{
             put("full_name", "Example Customer");

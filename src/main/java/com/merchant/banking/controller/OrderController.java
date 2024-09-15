@@ -25,7 +25,9 @@ private RestTemplate restTemplate;
 @PostMapping("/orders")
 public ResponseEntity<?> createOrder(@RequestBody Map<String, Object> request,
                                      @RequestHeader(value = "enableTracing", required = false) boolean enableTracing,
-                                     @RequestHeader(value = "deviate", required = false) boolean deviate) throws URISyntaxException {
+                                     @RequestHeader(value = "deviate", required = false) boolean deviate,
+                                     @RequestHeader(value = "enableComplianceAndTracing",required = false) boolean enableComplianceAndTracing,
+                                     @RequestHeader(value = "enableLogs",required = false) boolean enableLogs) throws URISyntaxException {
     Map<String, Object> payment = Map.ofEntries(
             Map.entry("id", "6516e61c-d279-a454-a837-bc52ce55ed49"),
             Map.entry("token", "0adc0e3c-ab44-4f33-bcc0-534ded7354ce"),
@@ -46,6 +48,8 @@ public ResponseEntity<?> createOrder(@RequestBody Map<String, Object> request,
         headers.add("deviate",String.valueOf(deviate));
         headers.add("Content-Type","application/json");
         headers.add("Revolut-Api-Version","new-3.2");
+        headers.add("enableComplianceAndTracing",String.valueOf(enableComplianceAndTracing));
+        headers.add("enableLogs",String.valueOf(enableLogs));
         
         Map<String, Object> requestPayload = new LinkedHashMap<String, Object>() {{
             put("saved_payment_method", new LinkedHashMap<String, Object>() {{
